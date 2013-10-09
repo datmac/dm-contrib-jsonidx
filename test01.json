@@ -1,0 +1,18 @@
+{ "items" : [
+    {
+      "title" : "A",
+      "description" : "B",
+      "authors" : [
+        {
+          "name" : "C",
+          "email": "D"
+        }
+      ],
+      "keywords" : [
+        "E",
+        "F"
+      ]
+    }
+  ]
+}
+

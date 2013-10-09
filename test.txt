@@ -1,0 +1,47 @@
+/
+==========================
+| # | lines         |
+| 0 | Array  /lines |
+
+/lines
+==========================
+| #   | title | desc        | users        | keys        |
+| 0.0 | A     | B           | Array /users | Array /keys |
+| 0.1 | G     | H           | Array /users | Array /keys |
+
+/users/ (X.)
+==========================
+| #      | name | email | 
+| 0.0.0  |  C   |  D    |
+| 0.1.0  |  I   |  J    |
+| 0.1.1  |  K   |  L    |
+
+/keys (X.)
+==========================
+| #     | @ |
+| 0.0.0 | E |
+| 0.0.1 | F |
+| 0.1.0 | M |
+| 0.1.1 | N |
+
+| COLNAME     | VALUE     | PATH           | ROWID |
+| lines        | /lines     | /              | 0     |
+| title       | A         | /lines          | 0.0   |
+| desc        | B         | /lines          | 0.0   |
+| users       | /users    | /lines          | 0.0   |
+| keys        | /keys     | /lines          | 0.0   |
+| title       | G         | /lines          | 0.1   |
+| desc        | H         | /lines          | 0.1   |
+| users       | /users    | /lines          | 0.1   |
+| keys        | /keys     | /lines          | 0.1   |
+| name        | C         | /lines/users    | 0.0.0 |
+| email       | D         | /lines/users    | 0.0.0 |
+| name        | I         | /lines/users    | 0.1.0 |
+| email       | J         | /lines/users    | 0.1.0 |
+| name        | K         | /lines/users    | 0.1.1 |
+| email       | L         | /lines/users    | 0.1.1 |
+| @           | E         | /lines/keys     | 0.0.0 |
+| @           | F         | /lines/keys     | 0.0.1 |
+| @           | M         | /lines/keys     | 0.1.0 |
+| @           | N         | /lines/keys     | 0.1.1 |
+

@@ -1,0 +1,14 @@
+{
+  "id" : "jsonidx",
+  "output" : "text/csv",
+  "title": {
+    "fr" : "Transforme du JSON en tableau facilement indexable",
+    "en" : "Transform JSON to an array that easy to index"
+  },
+  "description": {
+    "fr" : "Le tableau généré est sous forme CSV encodé en UTF8.",
+    "en": "The generated array is in CSV format with UTF8 encoding"
+  },
+  "parameters" :  {
+  }
+}
