@@ -26,11 +26,10 @@
   "peerDependencies": {
     "dm-server": "latest"
   },
-  "license": "All rights reserved",
+  "license": "MIT",
   "bugs": {
   },
   "bin": {
     "dm-contrib-jsonidx": "./cli.js"
-  },
-  "private": true
+  }
 }
