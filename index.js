@@ -33,111 +33,115 @@ function Command(options)
   self.Acount = [0]
 
   self.parser = clarinet.createStream();
-  self.parser.onerror = function (e) {
-    // an error happened. e is the error.
-  };
-  self.parser.onvalue = function (v) {
-    if (self.Tstack[self.Tstack.length - 1] === T_ARRAY) {
-      self.Acount[self.Adepth]++
+  self.parser.on("error", function (e) {
+      self.end();
     }
-    var k = self.Ostack[self.Ostack.length - 1] === self.Astack[self.Astack.length - 1] ? '    @' : self.Ostack[self.Ostack.length - 1];
-    self.push(CSV.stringify([
-          k,
-          v,
-          self.Acount.join('.'),
-          '/'.concat(self.Astack.join('/')),
-          typeof v,
-          self.Acount.length
-      ])
+  )
+  self.parser.on("value", function (v) {
+      if (self.Tstack[self.Tstack.length - 1] === T_ARRAY) {
+        self.Acount[self.Adepth]++
+      }
+        var k = self.Ostack[self.Ostack.length - 1] === self.Astack[self.Astack.length - 1] ? '    @' : self.Ostack[self.Ostack.length - 1];
+        self.push(CSV.stringify([
+              k,
+              v,
+              self.Acount.join('.'),
+              '/'.concat(self.Astack.join('/')),
+              typeof v,
+              self.Acount.length
+          ])
+        );
+        self.previousType = T_VALUE;
+
+      }
     );
-    self.previousType = T_VALUE;
+    self.parser.on("openobject", function (key) {
+        // opened an object. key is the first key.
+        if (self.Tstack[self.Tstack.length - 1] === T_ARRAY) {
+          self.Acount[self.Adepth]++;
+        }
+        self.Tstack.push(T_OBJECT);
+        self.Ostack.push(key);
 
-  };
-  self.parser.onopenobject = function (key) {
-    // opened an object. key is the first key.
-    if (self.Tstack[self.Tstack.length - 1] === T_ARRAY) {
-      self.Acount[self.Adepth]++;
-    }
-    self.Tstack.push(T_OBJECT);
-    self.Ostack.push(key);
+        if (self.previousType === T_NULL) {
+          self.push(CSV.stringify([
+                self.Ostack[self.Ostack.length - 1],
+                '/'.concat(key),
+                self.Acount.join('.'),
+                '/'.concat(self.Astack.join('/')),
+                'array',
+                self.Acount.length
+            ])
+          )
+        }
+        else if (self.previousType === T_ARRAY && self.previousKey) {
+          self.push(CSV.stringify([
+                self.previousKey,
+                '/' + self.previousKey,
+                self.Acount.join('.'),
+                '/'.concat(self.Astack.join('/')),
+                'array',
+                self.Acount.length
+            ])
+          )
+        }
 
-    if (self.previousType === T_NULL) {
-      self.push(CSV.stringify([
-            self.Ostack[self.Ostack.length - 1],
-            '/'.concat(key),
-            self.Acount.join('.'),
-            '/'.concat(self.Astack.join('/')),
-            'array',
-            self.Acount.length
-        ])
-      )
-    }
-    else if (self.previousType === T_ARRAY && self.previousKey) {
-      self.push(CSV.stringify([
-            self.previousKey,
-            '/' + self.previousKey,
-            self.Acount.join('.'),
-            '/'.concat(self.Astack.join('/')),
-            'array',
-            self.Acount.length
-        ])
-      )
-    }
+        self.previousKey = key;
+        self.previousType = T_OBJECT;
+      }
+    );
+    self.parser.on("key", function (key) {
+        // got a key in an object.
+        self.Ostack[self.Ostack.length - 1] = key;
 
-    self.previousKey = key;
-    self.previousType = T_OBJECT;
-  };
-  self.parser.onkey = function (key) {
-    // got a key in an object.
-    self.Ostack[self.Ostack.length - 1] = key;
+        if (self.previousType === T_ARRAY || self.previousType === T_OBJECT) {
+          self.push(CSV.stringify([
+                self.Ostack[self.Ostack.length - 1],
+                ' /'.concat(key),
+                self.Acount.join('.'),
+                '/'.concat(self.Astack.join('/')),
+                'array',
+                self.Acount.length
+            ])
+          )
+        }
+        self.previousType = T_KEY;
+        self.previousKey = key
+      }
+    );
+    self.parser.on("closeobject", function () {
+        // closed an object.
+        self.Ostack.pop()
+        self.previousType = T_OBJECT
 
-    if (self.previousType === T_ARRAY || self.previousType === T_OBJECT) {
-      self.push(CSV.stringify([
-            self.Ostack[self.Ostack.length - 1],
-            ' /'.concat(key),
-            self.Acount.join('.'),
-            '/'.concat(self.Astack.join('/')),
-            'array',
-            self.Acount.length
-        ])
-      )
-    }
-    self.previousType = T_KEY;
-    self.previousKey = key
-  };
-  self.parser.oncloseobject = function () {
-    // closed an object.
-    self.Ostack.pop()
-    self.previousType = T_OBJECT
-
-    self.Tstack.pop()
-  };
-  self.parser.onopenarray = function () {
-    // opened an array.
-    self.Adepth++;
-    self.Acount[self.Adepth] = 0;
-    self.Tstack.push(T_ARRAY)
-    self.previousType = T_ARRAY
-    if (self.Ostack[self.Ostack.length - 1]) {
-      self.Astack.push(self.Ostack[self.Ostack.length - 1])
-    }
-  };
-  self.parser.onclosearray = function () {
-    // closed an array.
-    self.previousType = T_ARRAY
-    self.Astack.pop()
-    self.Tstack.pop()
-    self.Acount = self.Acount.slice(0, -1)
-    self.Adepth--;
-  };
-  self.parser.onend = function () {
-    // parser stream is done, and ready to have more stuff written to it.
-    console.log('END');
-  };
-
-
-
-}
+        self.Tstack.pop()
+      }
+    );
+    self.parser.on("openarray", function () {
+        // opened an array.
+        self.Adepth++;
+        self.Acount[self.Adepth] = 0;
+        self.Tstack.push(T_ARRAY)
+        self.previousType = T_ARRAY
+        if (self.Ostack[self.Ostack.length - 1]) {
+          self.Astack.push(self.Ostack[self.Ostack.length - 1])
+        }
+      }
+    );
+    self.parser.on("closearray", function () {
+        // closed an array.
+        self.previousType = T_ARRAY
+        self.Astack.pop()
+        self.Tstack.pop()
+        self.Acount = self.Acount.slice(0, -1)
+        self.Adepth--;
+      }
+    );
+    self.parser.on("end", function () {
+        // parser stream is done, and ready to have more stuff written to it.
+      }
+    );
+  }
 
 Command.prototype = Object.create(
   Transform.prototype, { constructor: { value: Command }});
@@ -162,12 +166,11 @@ Command.prototype._transform = function (chunk, encoding, done) {
   self.parser.write(chunk);
   done();
 }
-Command.prototype.end = function () {
+Command.prototype._flush = function (done) {
   var self = this;
   self.parser.end();
-  self.emit('end');
-};
-
+  done();
+}
 module.exports = function (options, si) {
   var cmd = new Command(options);
   return si.pipe(cmd);
